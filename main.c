@@ -1,11 +1,13 @@
 // ############## LLM Generated Code Begins ##############
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include "bakery.h"
 
-#define MAX_CUSTOMERS 100
+#define MAX_CUSTOMERS 10000
 #define MAX_LINE_LEN 100
 
 typedef struct
@@ -14,13 +16,85 @@ typedef struct
     int id;
 } CustomerArrival;
 
-int main()
+void print_usage(const char *program_name)
 {
-    initialize_bakery();
+    printf("Usage: %s [OPTIONS]\n", program_name);
+    printf("Options:\n");
+    printf("  -c <num>    Number of chef threads (default: 4)\n");
+    printf("  -s <num>    Sofa capacity (default: 4)\n");
+    printf("  -b <num>    Bakery capacity (default: 25)\n");
+    printf("  -f          Fast mode (no usleep delays)\n");
+    printf("  -h          Show this help message\n");
+    printf("\nInput format:\n");
+    printf("  Each line: <time> Customer <id>\n");
+    printf("  End with: <EOF>\n");
+}
 
-    pthread_t chef_threads[NUM_CHEFS];
-    int chef_ids[NUM_CHEFS];
-    for (int i = 0; i < NUM_CHEFS; i++)
+int main(int argc, char *argv[])
+{
+    int num_chefs = 4;
+    int sofa_capacity = 4;
+    int bakery_capacity = 25;
+    int fast_mode = 0;
+    
+    // Parse command line arguments
+    int opt;
+    while ((opt = getopt(argc, argv, "c:s:b:fh")) != -1)
+    {
+        switch (opt)
+        {
+            case 'c':
+                num_chefs = atoi(optarg);
+                if (num_chefs <= 0 || num_chefs > 32)
+                {
+                    fprintf(stderr, "Error: Number of chefs must be between 1 and 32\n");
+                    return 1;
+                }
+                break;
+            case 's':
+                sofa_capacity = atoi(optarg);
+                if (sofa_capacity <= 0)
+                {
+                    fprintf(stderr, "Error: Sofa capacity must be positive\n");
+                    return 1;
+                }
+                break;
+            case 'b':
+                bakery_capacity = atoi(optarg);
+                if (bakery_capacity <= 0)
+                {
+                    fprintf(stderr, "Error: Bakery capacity must be positive\n");
+                    return 1;
+                }
+                break;
+            case 'f':
+                fast_mode = 1;
+                break;
+            case 'h':
+                print_usage(argv[0]);
+                return 0;
+            default:
+                print_usage(argv[0]);
+                return 1;
+        }
+    }
+    
+    printf("========================================\n");
+    printf("  BAKERY SIMULATION STARTING\n");
+    printf("========================================\n");
+    printf("Configuration:\n");
+    printf("  Number of Chefs:      %d\n", num_chefs);
+    printf("  Sofa Capacity:        %d\n", sofa_capacity);
+    printf("  Bakery Capacity:      %d\n", bakery_capacity);
+    printf("  Fast Mode:            %s\n", fast_mode ? "ON" : "OFF");
+    printf("========================================\n\n");
+
+    initialize_bakery(num_chefs, sofa_capacity, bakery_capacity);
+
+    pthread_t *chef_threads = malloc(num_chefs * sizeof(pthread_t));
+    int *chef_ids = malloc(num_chefs * sizeof(int));
+    
+    for (int i = 0; i < num_chefs; i++)
     {
         chef_ids[i] = i + 1;
         if (pthread_create(&chef_threads[i], NULL, chef_run, &chef_ids[i]) != 0)
@@ -30,7 +104,7 @@ int main()
         }
     }
 
-    CustomerArrival arrivals[MAX_CUSTOMERS];
+    CustomerArrival *arrivals = malloc(MAX_CUSTOMERS * sizeof(CustomerArrival));
     int total_customers = 0;
     char line[MAX_LINE_LEN], type[20];
     int time, id;
@@ -46,8 +120,19 @@ int main()
             arrivals[total_customers].time = time;
             arrivals[total_customers].id = id;
             total_customers++;
+            if (total_customers >= MAX_CUSTOMERS)
+            {
+                fprintf(stderr, "Warning: Maximum customer limit reached\n");
+                break;
+            }
         }
     }
+    
+    stats.total_customers = total_customers;
+    stats.simulation_start_time = global_time;
+    
+    struct timeval start_wall_time, end_wall_time;
+    gettimeofday(&start_wall_time, NULL);
 
     int customer_idx = 0;
     while (true)
@@ -81,8 +166,11 @@ int main()
         pthread_cond_broadcast(&time_tick_cv);
         pthread_mutex_unlock(&time_mutex);
 
-        // Small sleep to allow other threads to run
-        usleep(500);
+        // Sleep to allow other threads to run (unless in fast mode)
+        if (!fast_mode)
+        {
+            usleep(100);
+        }
 
         // Check for simulation termination
         if (customer_idx == total_customers && active_customers == 0)
@@ -96,13 +184,32 @@ int main()
         global_time++;
     }
 
+    stats.simulation_end_time = global_time;
+    
     // Wait for all chef threads to complete
-    for (int i = 0; i < NUM_CHEFS; i++)
+    for (int i = 0; i < num_chefs; i++)
     {
         pthread_join(chef_threads[i], NULL);
     }
+    
+    gettimeofday(&end_wall_time, NULL);
+    double wall_time = (end_wall_time.tv_sec - start_wall_time.tv_sec) + 
+                       (end_wall_time.tv_usec - start_wall_time.tv_usec) / 1000000.0;
+
+    // Print statistics
+    print_statistics();
+    
+    printf("--- Real-World Performance ---\n");
+    printf("Wall-Clock Time:             %.3f seconds\n", wall_time);
+    printf("Simulation Speed:            %.2fx real-time\n", 
+           stats.simulation_end_time / wall_time);
+    printf("========================================\n\n");
 
     cleanup_bakery();
+    free(chef_threads);
+    free(chef_ids);
+    free(arrivals);
+    
     return 0;
 }
 
