@@ -1,234 +1,118 @@
-# High-Performance Multi-Threaded Bakery Simulation# High-Performance Multi-Threaded Bakery Simulation
+# High-Performance Multi-Threaded Bakery Simulation
 
+[![Language](https://img.shields.io/badge/language-C-blue.svg)](https://en.wikipedia.org/wiki/C_(programming_language))
+[![Threading](https://img.shields.io/badge/threading-POSIX-green.svg)](https://en.wikipedia.org/wiki/POSIX_Threads)
 
+## Overview
 
-[![Language](https://img.shields.io/badge/language-C-blue.svg)](https://en.wikipedia.org/wiki/C_(programming_language))[![Language](https://img.shields.io/badge/language-C-blue.svg)](https://en.wikipedia.org/wiki/C_(programming_language))
+A discrete event simulation of a resource-constrained service system built in C using POSIX threads. This project implements fine-grained concurrency control, work-stealing scheduling, and comprehensive performance instrumentation to handle high-throughput workloads efficiently.
 
-[![Threading](https://img.shields.io/badge/threading-POSIX-green.svg)](https://en.wikipedia.org/wiki/POSIX_Threads)[![Threading](https://img.shields.io/badge/threading-POSIX-green.svg)](https://en.wikipedia.org/wiki/POSIX_Threads)
-
-[![License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
-
-## Executive Summary
-
-## Executive Summary
-
-A **high-performance discrete event simulation** implementing a resource-constrained service system in C using POSIX threads. This project demonstrates advanced concurrency control, lock optimization, and performance analytics in a multi-threaded environment.
-
-A **high-performance discrete event simulation** implementing a resource-constrained service system in C using POSIX threads. This project demonstrates advanced concurrency control, lock optimization, and performance analytics in a multi-threaded environment.
-
-**Key Achievement:** Reduced lock contention by **77.4%** (from 142,700 to 32,260 contentions) through fine-grained locking strategies while improving chef utilization by **3.4%** and wall-clock performance by **69.1%** (from 0.081s to 0.025s) on medium workloads.
-
-**Key Achievement:** Reduced lock contention by **77.4%** (from 142,700 to 32,260 contentions) through fine-grained locking strategies while improving chef utilization by **3.4%** and wall-clock performance by **69.1%** (from 0.081s to 0.025s) on medium workloads.
+The system models a bakery with configurable capacity constraints, dynamic thread pools, and multiple synchronization queues, achieving **32,260 lock contentions** and **97.38% chef utilization** on 100-customer workloads with **5,394x real-time execution speed**.
 
 ---
 
-**Key Achievement:** Reduced lock contention by **77.4%** (from 142,700 to 32,260 contentions) through fine-grained locking strategies while improving chef utilization by **3.4%** and wall-clock performance by **69.1%** (from 0.081s to 0.025s) on medium workloads.
+## Key Features
 
-## Performance Highlights
+- **Fine-grained locking strategy** - Critical sections optimized to minimize lock hold time
+- **Work-stealing scheduler** - Non-blocking task distribution across worker threads
+- **Configurable parallelism** - Dynamic thread pool scaling (1-32 workers)
+- **Performance instrumentation** - Real-time tracking of 15+ concurrency metrics
+- **Comprehensive test suite** - 6 datasets covering edge cases and stress scenarios
 
 ---
-
-| Metric | Before Optimization | After Optimization | Improvement |
-
-|--------|-------------------|-------------------|-------------|## Performance Highlights
-
-| **Lock Contentions** (100 customers) | 142,700 | 32,260 | **↓ 77.4%** |
-
-| **Chef Utilization** | 94.20% | 97.38% | **↑ 3.4%** || Metric | Before Optimization | After Optimization | Improvement |
-
-| **Wall-Clock Time** | 0.081s | 0.025s | **↓ 69.1%** ||--------|-------------------|-------------------|-------------|
-
-| **Simulation Speed** | 1,680x real-time | 5,394x real-time | **↑ 221%** || **Lock Contentions** (100 customers) | 142,700 | 32,260 | **↓ 77.4%** |
-
-| **Average Wait Time** | 34.60 time units | 34.46 time units | **↓ 0.4%** || **Chef Utilization** | 94.20% | 97.38% | **↑ 3.4%** |
-
-| **Wall-Clock Time** | 0.081s | 0.025s | **↓ 69.1%** |
-
----| **Simulation Speed** | 1,680x real-time | 5,394x real-time | **↑ 221%** |
-
-| **Average Wait Time** | 34.60 time units | 34.46 time units | **↓ 0.4%** |
 
 ## Technical Architecture
 
----
+### System Design
 
-### Core Innovations
+#### 1. **Critical Section Optimization**
+- Minimized lock hold times by separating synchronization from I/O operations
+- Moved expensive operations (printf, state updates) outside critical sections
+- Achieved low contention rates through targeted mutex usage
 
-## Technical Architecture
+#### 2. **Configurable Thread Pool**
+- Dynamic worker thread allocation (1-32 threads) via command-line arguments
+- Horizontal scaling to match workload characteristics
+- Optimal configuration varies by arrival pattern and system resources
 
-#### 1. **Fine-Grained Lock Optimization**
-
-- **Challenge:** Original implementation held `bakery_state_mutex` during expensive operations (printf, state updates)### Core Innovations
-
-- **Solution:** Shrunk critical sections to only protect shared data structure modifications
-
-- **Result:** 77.4% reduction in lock contention, enabling better parallelism#### 1. **Fine-Grained Lock Optimization**
-
-- **Challenge:** Original implementation held `bakery_state_mutex` during expensive operations (printf, state updates)
-
-#### 2. **Configurable Thread Pool**- **Solution:** Shrunk critical sections to only protect shared data structure modifications
-
-- Dynamic chef thread allocation (1-32 threads) via command-line arguments- **Result:** 77.4% reduction in lock contention, enabling better parallelism
-
-- Allows horizontal scaling to match workload characteristics
-
-- Optimal configuration varies by arrival pattern and system resources#### 2. **Configurable Thread Pool**
-
-- Dynamic chef thread allocation (1-32 threads) via command-line arguments
-
-#### 3. **Comprehensive Performance Analytics**- Allows horizontal scaling to match workload characteristics
-
-- Real-time tracking of 15+ performance metrics- Optimal configuration varies by arrival pattern and system resources
-
+#### 3. **Performance Instrumentation**
+- Real-time tracking of 15+ concurrency metrics
 - Queue depth monitoring, lock contention analysis, utilization statistics
+- Data-driven insights for system tuning
 
-- Enables data-driven optimization decisions#### 3. **Comprehensive Performance Analytics**
+#### 4. **Work-Stealing Scheduler**
+- Non-blocking task acquisition using `pthread_mutex_trylock()`
+- Automatic fallback to alternative work queues when primary tasks unavailable
+- Reduces idle time and maximizes CPU utilization
 
-- Real-time tracking of 15+ performance metrics
-
-#### 4. **Work-Stealing Scheduler**- Queue depth monitoring, lock contention analysis, utilization statistics
-
-- Chefs use `pthread_mutex_trylock()` to avoid blocking on cash register- Enables data-driven optimization decisions
-
-- Falls back to baking tasks when payment processing is unavailable
-
-- Reduces idle time and improves CPU utilization#### 4. **Work-Stealing Scheduler**
-
-- Chefs use `pthread_mutex_trylock()` to avoid blocking on cash register
-
-### System Components- Falls back to baking tasks when payment processing is unavailable
-
-- Reduces idle time and improves CPU utilization
+### System Components
 
 #### 1. **Main Scheduler Thread**
-
-- Manages global simulation clock### System Components
-
-- Spawns customer threads based on arrival timestamps
-
-- Broadcasts time ticks via `pthread_cond_broadcast()` for deterministic ordering#### 1. **Main Scheduler Thread**
-
 - Manages global simulation clock
+- Spawns customer threads based on arrival timestamps
+- Broadcasts time ticks via `pthread_cond_broadcast()` for deterministic ordering
 
-#### 2. **Worker Thread Pool (Chefs)**- Spawns customer threads based on arrival timestamps
-
-- Configurable size (default: 4 threads)- Broadcasts time ticks via `pthread_cond_broadcast()` for deterministic ordering
-
+#### 2. **Worker Thread Pool (Chefs)**
+- Configurable size (default: 4 threads)
 - Priority-based task selection:
-
-  1. **Payment Processing** (High Priority - requires cash register lock)#### 2. **Worker Thread Pool (Chefs)**
-
-  2. **Baking** (Medium Priority - work stealing fallback)- Configurable size (default: 4 threads)
-
-- Persistent threads with conditional wait/signal coordination- Priority-based task selection:
-
   1. **Payment Processing** (High Priority - requires cash register lock)
+  2. **Baking** (Medium Priority - work stealing fallback)
+- Persistent threads with conditional wait/signal coordination
 
-#### 3. **Client Threads (Customers)**  2. **Baking** (Medium Priority - work stealing fallback)
-
-- State machine traversal: `ARRIVED → ENTERED → SITTING → ORDERED → PAYING → LEFT`- Persistent threads with conditional wait/signal coordination
-
-- Per-customer synchronization primitives (mutex + condition variable)
-
-- FIFO queue discipline enforced through strict ordering#### 3. **Client Threads (Customers)**
-
+#### 3. **Client Threads (Customers)**
 - State machine traversal: `ARRIVED → ENTERED → SITTING → ORDERED → PAYING → LEFT`
-
-### Concurrency Control Mechanisms- Per-customer synchronization primitives (mutex + condition variable)
-
+- Per-customer synchronization primitives (mutex + condition variable)
 - FIFO queue discipline enforced through strict ordering
 
+### Concurrency Control Mechanisms
+
 | Mechanism | Purpose | Optimization |
-
-|-----------|---------|--------------|### Concurrency Control Mechanisms
-
+|-----------|---------|--------------|
 | `bakery_state_mutex` | Protects queues and capacity counters | **Minimized hold time** - moved prints outside |
-
-| `stats_mutex` | Guards performance metrics | **Separate lock** - prevents stats from blocking core logic || Mechanism | Purpose | Optimization |
-
-| `cash_register_mutex` | Serializes payment processing | **Non-blocking trylock** - enables work stealing ||-----------|---------|--------------|
-
-| `print_mutex` | Serializes stdout | **Outside critical sections** || `bakery_state_mutex` | Protects queues and capacity counters | **Minimized hold time** - moved prints outside |
-
-| Atomic operations | Lock-free counter updates | GCC built-ins (`__sync_fetch_and_add`) || `stats_mutex` | Guards performance metrics | **Separate lock** - prevents stats from blocking core logic |
-
+| `stats_mutex` | Guards performance metrics | **Separate lock** - prevents stats from blocking core logic |
 | `cash_register_mutex` | Serializes payment processing | **Non-blocking trylock** - enables work stealing |
-
----| `print_mutex` | Serializes stdout | **Outside critical sections** |
-
+| `print_mutex` | Serializes stdout | **Outside critical sections** |
 | Atomic operations | Lock-free counter updates | GCC built-ins (`__sync_fetch_and_add`) |
+
+---
 
 ## Build & Execution
 
----
-
 ### Prerequisites
 
-- **GCC** compiler (with C11 support)## System Architecture
-
+- **GCC** compiler (with C11 support)
 - **POSIX-compliant OS** (Linux, macOS, WSL)
+- **pthreads** library (usually included)
 
-- **pthreads** library (usually included)### 1. The Scheduler (Main Thread)
-
-- Acts as the central clock and spawner.
-
-### Quick Start- Dynamically allocates customer threads based on arrival timestamps.
-
-- Broadcasts time ticks (`pthread_cond_broadcast`) to synchronize all actors to a global simulation clock.
+### Quick Start
 
 ```bash
+# Clone and build
+cd bakerysim
+make
 
-# Clone and build### 2. Worker Threads (Chefs)
+# Run with default configuration (4 chefs)
+./bakery_sim < test_medium.txt
 
-cd bakerysim- A pool of persistent threads that poll multiple work queues.
-
-make- **Priority Logic:** 1. Check `Payment Queue` (Highest Priority).
-
-    2. Attempt to acquire `Cash Register Mutex`. 
-
-# Run with default configuration (4 chefs)    3. If locked, fallback to `Baking Queue` (Work Stealing/Optimization).
-
-./bakery_sim < test_medium.txt    4. If no work, yield CPU (`sched_yield`).
-
-
-
-# Run with custom configuration### 3. Client Threads (Customers)
-
-./bakery_sim -c 8 -b 50 -s 10 < test_large.txt- Independent threads traversing a state machine:
-
-```  `ARRIVED` -> `ENTERED` -> `SITTING` -> `ORDERED` -> `PAYING` -> `LEFT`
-
-- Synchronization points ensure strict ordering (e.g., a customer cannot pay before baking is complete).
+# Run with custom configuration
+./bakery_sim -c 8 -b 50 -s 10 < test_large.txt
+```
 
 ### Command-Line Options
 
-## Performance & Constraints
-
-```* **Capacity:** 25 Concurrent Active Threads (Hard limit enforced via Mutex).
-
-Usage: ./bakery_sim [OPTIONS]* **Throughput:** Capable of handling arbitrary customer loads limited only by system thread limits.
-
-* **Deterministic Logic:** While thread scheduling is non-deterministic, the simulation enforces logical determinism (e.g., FIFO processing for customers entering at different timestamps).
+```
+Usage: ./bakery_sim [OPTIONS]
 
 Options:
-
-  -c <num>    Number of chef threads (default: 4, range: 1-32)## Setup & Execution
-
+  -c <num>    Number of chef threads (default: 4, range: 1-32)
   -s <num>    Sofa capacity (default: 4)
+  -b <num>    Bakery capacity (default: 25)
+  -f          Fast mode (no sleep delays, for benchmarking)
+  -h          Show help message
 
-  -b <num>    Bakery capacity (default: 25)**Dependencies:**
-
-  -f          Fast mode (no sleep delays, for benchmarking)- GCC Compiler
-
-  -h          Show help message- POSIX compliant OS (Linux/macOS)
-
-
-
-Input format:**Build:**
-
-  <time> Customer <id>```bash
-
-  ...gcc -o simulation main.c bakery.c queue.c -lpthread
+Input format:
+  <time> Customer <id>
+  ...
   <EOF>
 ```
 
@@ -270,26 +154,16 @@ make clean        # Remove build artifacts
 
 ---
 
-## Optimization Techniques Implemented
+## Implementation Details
 
 ### 1. Critical Section Reduction
-**Before:**
 ```c
-pthread_mutex_lock(&bakery_state_mutex);
-customers_in_bakery++;
-self->state = ENTERED;
-enqueue(standing_queue, self);
-printf("%d Customer %d enters\n", ...);  // EXPENSIVE in lock!
-pthread_mutex_unlock(&bakery_state_mutex);
-```
-
-**After:**
-```c
+// Split critical sections to minimize lock hold time
 pthread_mutex_lock(&bakery_state_mutex);
 customers_in_bakery++;  // Only protect shared state
 pthread_mutex_unlock(&bakery_state_mutex);
 
-// Do expensive work outside lock
+// Perform I/O outside lock
 self->state = ENTERED;
 printf("%d Customer %d enters\n", ...);
 
@@ -299,63 +173,53 @@ pthread_mutex_unlock(&bakery_state_mutex);
 ```
 
 ### 2. Lock Hierarchy Separation
-- Separate `stats_mutex` from `bakery_state_mutex`
-- Statistics updates don't block customer/chef operations
-- Prevents unnecessary serialization
+- Dedicated `stats_mutex` isolated from `bakery_state_mutex`
+- Statistics updates don't block core simulation operations
+- Prevents unnecessary serialization of independent operations
 
 ### 3. Non-Blocking Work Stealing
 ```c
 if (pthread_mutex_trylock(&cash_register_mutex) == 0) {
     // Process payment
 } else {
-    // Register busy - go bake instead
+    // Register busy - work on baking queue instead
     if (!is_empty(cake_request_queue)) {
-        // Work stealing!
+        process_baking_task();
     }
 }
 ```
 
-### 4. Memory & Configuration Optimization
-- Dynamic allocation for chef threads (scales with `-c` flag)
-- Increased `MAX_CUSTOMERS` from 100 to 10,000
-- Configurable capacity parameters for workload tuning
+### 4. Dynamic Resource Management
+- Chef threads allocated dynamically based on `-c` flag
+- Supports up to 10,000 concurrent customers
+- Configurable capacity parameters for different workload profiles
 
 ---
 
-## Key Learnings & Applications
+## Design Considerations
 
-### Quantitative Skills Demonstrated
+### Concurrency Patterns
+- Fine-grained locking to reduce contention hotspots
+- Conditional variables for efficient thread coordination
+- Atomic operations for lock-free counters
 
-1. **Concurrency Engineering**
-   - Achieved 77.4% reduction in lock contention through lock granularity optimization
-   - Improved parallel efficiency from 94% to 97% utilization under load
+### Performance Characteristics
+- Demonstrates Amdahl's Law effects with increasing parallelism
+- Non-linear scaling due to synchronization overhead
+- Optimal thread count varies by workload characteristics
 
-2. **Performance Analytics**
-   - Instrumented 15+ real-time metrics (queue depths, latency, throughput)
-   - Data-driven optimization: identified critical section as primary bottleneck
-
-3. **Scalability Design**
-   - Horizontal scaling via configurable thread pools
-   - Demonstrated non-linear scaling characteristics (Amdahl's Law in practice)
-
-4. **Systems Programming**
-   - Low-level synchronization primitives (mutexes, condition variables, atomics)
-   - Memory management in concurrent environment (10,000+ dynamic allocations)
-
-### Applicable to Quantitative Trading
-
-- **Lock-free data structures:** Similar to orderbook implementations
-- **Work stealing:** Analogous to task distribution in parallel backtesting
-- **Performance measurement:** Critical for HFT system optimization
-- **Resource contention:** Models exchange gateway rate limiting
+### Scalability
+- Horizontal scaling via configurable thread pools
+- Memory-efficient queue structures
+- Low overhead synchronization primitives
 
 ---
 
-## Future Optimization Opportunities
+## Potential Enhancements
 
-1. **Lock-Free Queues:** Replace mutex-protected queues with CAS-based lock-free structures
+1. **Lock-Free Queues:** Replace mutex-protected queues with CAS-based structures
 2. **NUMA Awareness:** Thread-local caching and CPU pinning for multi-socket systems
-3. **Adaptive Thread Pool:** Dynamic chef count based on queue depth (auto-scaling)
+3. **Adaptive Thread Pool:** Dynamic worker count based on queue depth
 4. **Batch Processing:** Group operations to reduce context switching overhead
 5. **Cache-Line Alignment:** Prevent false sharing in hot data structures
 
@@ -371,7 +235,7 @@ bakerysim/
 ├── queue.c                 # Linked-list queue implementation
 ├── queue.h                 # Queue interface
 ├── Makefile                # Build automation
-├── README.md               # This file
+├── README.md               # Documentation
 ├── BENCHMARKS.md           # Detailed performance analysis
 ├── test_small.txt          # 10 customer test
 ├── test_edge_*.txt         # Edge case tests
@@ -381,24 +245,8 @@ bakerysim/
 
 ---
 
-## Resume-Ready Bullet Points
-
-1. **"Optimized multi-threaded discrete event simulation in C, reducing lock contention by 77% through fine-grained locking strategies, improving throughput from 1,680x to 5,394x real-time on 100-customer workloads"**
-
-2. **"Engineered work-stealing scheduler with non-blocking lock acquisition, increasing chef utilization from 94% to 97% and reducing wall-clock execution time by 69%"**
-
-3. **"Implemented comprehensive performance analytics system tracking 15+ concurrency metrics (queue depths, lock contentions, thread utilization), enabling data-driven optimization decisions"**
-
-4. **"Designed horizontally scalable worker thread pool handling 1,000+ concurrent entities with configurable capacity constraints, demonstrating Amdahl's Law effects in practice"**
-
-5. **"Built thread-safe resource management system using POSIX primitives (mutexes, condition variables, atomics), managing 10,000+ dynamic memory allocations without leaks"**
-
----
-
 ## Author
 
 **GitHub:** [@meet2701](https://github.com/meet2701/bakerysim)
 
-**Project Focus:** Systems Programming, Concurrent Algorithms, Performance Engineering
-
-*This project demonstrates low-level systems programming skills applicable to quantitative trading systems, high-frequency trading infrastructure, and parallel computation frameworks.*
+A multi-threaded discrete event simulation demonstrating concurrency control, performance optimization, and scalable system design in C.
