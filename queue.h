@@ -1,5 +1,3 @@
-// ############## LLM Generated Code Begins ##############
-
 #ifndef QUEUE_H
 #define QUEUE_H
 
@@ -28,5 +26,3 @@ int is_empty(Queue *q);
 void destroy_queue(Queue *q);
 
 #endif // QUEUE_H
-
-// ############## LLM Generated Code Ends ##############

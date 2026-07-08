@@ -1,5 +1,3 @@
-// ############## LLM Generated Code Begins ##############
-
 #ifndef BAKERY_H
 #define BAKERY_H
 
@@ -107,5 +105,3 @@ void print_statistics();
 void update_queue_stats();
 
 #endif // BAKERY_H
-
-// ############## LLM Generated Code Ends ##############

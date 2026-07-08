@@ -1,5 +1,3 @@
-// ############## LLM Generated Code Begins ##############
-
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -527,5 +525,3 @@ void print_statistics()
     
     printf("========================================\n");
 }
-
-// ############## LLM Generated Code Ends ##############

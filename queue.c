@@ -1,5 +1,3 @@
-// ############## LLM Generated Code Begins ##############
-
 #include "queue.h"
 #include <stdio.h>
 
@@ -73,5 +71,3 @@ void destroy_queue(Queue *q)
     }
     free(q);
 }
-
-// ############## LLM Generated Code Ends ##############
